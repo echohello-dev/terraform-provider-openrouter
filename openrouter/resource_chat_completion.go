@@ -170,17 +170,35 @@ func chatCompletionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if len(resp.Choices) > 0 {
 		choice := resp.Choices[0]
-		d.Set("finish_reason", choice.FinishReason)
-		d.Set("content", choice.Message.Content)
+		if err := d.Set("finish_reason", choice.FinishReason); err != nil {
+			return diag.Errorf("Failed to set finish_reason: %s", err)
+		}
+		if err := d.Set("content", choice.Message.Content); err != nil {
+			return diag.Errorf("Failed to set content: %s", err)
+		}
 	}
 
-	d.Set("response_id", resp.ID)
-	d.Set("response_object", resp.Object)
-	d.Set("response_created", resp.Created)
-	d.Set("response_model", resp.Model)
-	d.Set("prompt_tokens", resp.Usage.PromptTokens)
-	d.Set("completion_tokens", resp.Usage.CompletionTokens)
-	d.Set("total_tokens", resp.Usage.TotalTokens)
+	if err := d.Set("response_id", resp.ID); err != nil {
+		return diag.Errorf("Failed to set response_id: %s", err)
+	}
+	if err := d.Set("response_object", resp.Object); err != nil {
+		return diag.Errorf("Failed to set response_object: %s", err)
+	}
+	if err := d.Set("response_created", resp.Created); err != nil {
+		return diag.Errorf("Failed to set response_created: %s", err)
+	}
+	if err := d.Set("response_model", resp.Model); err != nil {
+		return diag.Errorf("Failed to set response_model: %s", err)
+	}
+	if err := d.Set("prompt_tokens", resp.Usage.PromptTokens); err != nil {
+		return diag.Errorf("Failed to set prompt_tokens: %s", err)
+	}
+	if err := d.Set("completion_tokens", resp.Usage.CompletionTokens); err != nil {
+		return diag.Errorf("Failed to set completion_tokens: %s", err)
+	}
+	if err := d.Set("total_tokens", resp.Usage.TotalTokens); err != nil {
+		return diag.Errorf("Failed to set total_tokens: %s", err)
+	}
 
 	return nil
 }

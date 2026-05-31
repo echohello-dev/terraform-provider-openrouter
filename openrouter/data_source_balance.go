@@ -64,14 +64,30 @@ func balanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.SetId("openrouter-balance")
-	d.Set("label", keyData.Label)
-	d.Set("limit", keyData.Limit)
-	d.Set("limit_remaining", keyData.LimitRemaining)
-	d.Set("usage", keyData.Usage)
-	d.Set("usage_daily", keyData.UsageDaily)
-	d.Set("usage_weekly", keyData.UsageWeekly)
-	d.Set("usage_monthly", keyData.UsageMonthly)
-	d.Set("is_free_tier", keyData.IsFreeTier)
+	if err := d.Set("label", keyData.Label); err != nil {
+		return diag.Errorf("Failed to set label: %s", err)
+	}
+	if err := d.Set("limit", keyData.Limit); err != nil {
+		return diag.Errorf("Failed to set limit: %s", err)
+	}
+	if err := d.Set("limit_remaining", keyData.LimitRemaining); err != nil {
+		return diag.Errorf("Failed to set limit_remaining: %s", err)
+	}
+	if err := d.Set("usage", keyData.Usage); err != nil {
+		return diag.Errorf("Failed to set usage: %s", err)
+	}
+	if err := d.Set("usage_daily", keyData.UsageDaily); err != nil {
+		return diag.Errorf("Failed to set usage_daily: %s", err)
+	}
+	if err := d.Set("usage_weekly", keyData.UsageWeekly); err != nil {
+		return diag.Errorf("Failed to set usage_weekly: %s", err)
+	}
+	if err := d.Set("usage_monthly", keyData.UsageMonthly); err != nil {
+		return diag.Errorf("Failed to set usage_monthly: %s", err)
+	}
+	if err := d.Set("is_free_tier", keyData.IsFreeTier); err != nil {
+		return diag.Errorf("Failed to set is_free_tier: %s", err)
+	}
 
 	return nil
 }

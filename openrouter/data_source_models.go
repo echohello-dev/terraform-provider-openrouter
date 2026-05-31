@@ -101,7 +101,9 @@ func modelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 
 	if models == nil {
 		d.SetId("openrouter-models")
-		d.Set("models", []interface{}{})
+		if err := d.Set("models", []interface{}{}); err != nil {
+			return diag.Errorf("Failed to set models: %s", err)
+		}
 		return nil
 	}
 

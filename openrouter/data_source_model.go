@@ -101,16 +101,36 @@ func modelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) di
 	}
 
 	d.SetId(foundModel.ID)
-	d.Set("name", foundModel.Name)
-	d.Set("description", foundModel.Description)
-	d.Set("context_length", foundModel.ContextLength)
-	d.Set("created", foundModel.Created)
-	d.Set("pricing", pricing)
-	d.Set("top_provider", foundModel.TopProvider.SelectedMode)
-	d.Set("architecture", foundModel.Architecture.ModelClass)
-	d.Set("supported_parameters", foundModel.SupportedParams)
-	d.Set("knowledge_cutoff", foundModel.KnowledgeCutoff)
-	d.Set("features", foundModel.Features)
+	if err := d.Set("name", foundModel.Name); err != nil {
+		return diag.Errorf("Failed to set name: %s", err)
+	}
+	if err := d.Set("description", foundModel.Description); err != nil {
+		return diag.Errorf("Failed to set description: %s", err)
+	}
+	if err := d.Set("context_length", foundModel.ContextLength); err != nil {
+		return diag.Errorf("Failed to set context_length: %s", err)
+	}
+	if err := d.Set("created", foundModel.Created); err != nil {
+		return diag.Errorf("Failed to set created: %s", err)
+	}
+	if err := d.Set("pricing", pricing); err != nil {
+		return diag.Errorf("Failed to set pricing: %s", err)
+	}
+	if err := d.Set("top_provider", foundModel.TopProvider.SelectedMode); err != nil {
+		return diag.Errorf("Failed to set top_provider: %s", err)
+	}
+	if err := d.Set("architecture", foundModel.Architecture.ModelClass); err != nil {
+		return diag.Errorf("Failed to set architecture: %s", err)
+	}
+	if err := d.Set("supported_parameters", foundModel.SupportedParams); err != nil {
+		return diag.Errorf("Failed to set supported_parameters: %s", err)
+	}
+	if err := d.Set("knowledge_cutoff", foundModel.KnowledgeCutoff); err != nil {
+		return diag.Errorf("Failed to set knowledge_cutoff: %s", err)
+	}
+	if err := d.Set("features", foundModel.Features); err != nil {
+		return diag.Errorf("Failed to set features: %s", err)
+	}
 
 	return nil
 }
