@@ -1,0 +1,68 @@
+[tools]
+go = "1.25"
+golangci-lint = "latest"
+"go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "latest"
+
+[env]
+GOTOOLCHAIN = "local"
+
+[tasks.default]
+description = "List available tasks"
+alias = "h"
+run = ["mise tasks"]
+
+[tasks.build]
+description = "Build the provider binary"
+alias = "b"
+run = [
+  "mkdir -p .build/",
+  "go build -o .build/terraform-provider-discord",
+]
+run_windows = [
+  "mkdir -p .build",
+  "go build -o .build\\terraform-provider-discord",
+]
+sources = ["discord/**/*.go", "main.go", "go.mod", "go.sum"]
+outputs = [".build/terraform-provider-discord"]
+
+[tasks.lint]
+description = "Run golangci-lint"
+alias = "l"
+run = ["golangci-lint run ./..."]
+
+[tasks.test]
+description = "Run unit tests"
+alias = "t"
+run = ["go test -v ./..."]
+
+[tasks.tidy]
+description = "Clean up go.mod and go.sum"
+run = ["go mod tidy"]
+
+[tasks.fmt]
+description = "Format Go code"
+run = ["go fmt ./..."]
+
+[tasks.doc]
+description = "Generate Terraform documentation"
+run = ["tfplugindocs generate --rendered-provider-name Discord --provider-name discord"]
+
+[tasks.validate]
+description = "Validate the provider"
+depends = ["lint", "test"]
+
+[tasks.install]
+description = "Install provider to terraform plugins dir"
+run = [
+  "mise run build",
+  "mkdir -p ~/.terraform.d/plugins/registry.terraform.io/echohello-dev/discord/0.0.1/darwin_amd64",
+  "cp .build/terraform-provider-discord ~/.terraform.d/plugins/registry.terraform.io/echohello-dev/discord/0.0.1/darwin_amd64/",
+]
+run_windows = [
+  "mise run build",
+  "if not exist \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\discord\\0.0.1\\windows_amd64\" mkdir \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\discord\\0.0.1\\windows_amd64\"",
+  "copy .build\\terraform-provider-discord \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\discord\\0.0.1\\windows_amd64\\",
+]
+
+[settings]
+experimental = true
