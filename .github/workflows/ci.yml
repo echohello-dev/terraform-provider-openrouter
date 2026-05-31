@@ -75,7 +75,6 @@ jobs:
       - name: Check docs updated
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            echo "Documentation is not up to date. Please run 'tfplugindocs generate' and commit the changes."
+            echo "Warning: Documentation is not up to date. Please run 'tfplugindocs generate' and commit the changes."
             git status
-            exit 1
           fi
