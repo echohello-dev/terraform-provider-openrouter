@@ -22,9 +22,19 @@ description: |-
 
 ### Optional
 
+- `frequency_penalty` (Number) Penalty for repeating tokens (-2.0 to 2.0). Positive values reduce repetition.
+- `logprobs` (Boolean) Whether to return log probabilities of the output tokens.
 - `max_tokens` (Number) Maximum number of tokens to generate.
+- `presence_penalty` (Number) Penalty for introducing new tokens (-2.0 to 2.0). Positive values encourage new topics.
+- `response_format` (String) Format for the response: text, json_object, or json_schema.
+- `seed` (Number) Seed for deterministic sampling. If set, repeated requests with the same parameters should return similar results.
+- `session_id` (String) A stable session identifier (max 128 chars).
+- `stop` (List of String) Up to 4 sequences where the API will stop generating further tokens.
+- `stream` (Boolean) Whether to stream the response back. Terraform cannot consume streams; this is for API passthrough only.
 - `temperature` (Number) Sampling temperature (0-2). Higher values make output more random. If unset, the API default (1.0) is used.
+- `top_logprobs` (Number) Number of top log probabilities to return per output token (0-20). Only used if logprobs is true.
 - `top_p` (Number) Nucleus sampling parameter. Higher values make output more focused.
+- `user` (String) A unique identifier representing your end-user.
 
 ### Read-Only
 

@@ -83,24 +83,126 @@ func TestResourceChatCompletionSchema(t *testing.T) {
 
 	schema := r.Schema
 
-	if _, ok := schema["model"]; !ok {
-		t.Error("Chat completion resource should have model field")
+	requiredFields := []string{
+		"model", "messages", "max_tokens", "temperature", "top_p",
+		"seed", "stop", "frequency_penalty", "presence_penalty",
+		"response_format", "stream", "user", "session_id",
+		"logprobs", "top_logprobs", "content",
 	}
 
-	if _, ok := schema["messages"]; !ok {
-		t.Error("Chat completion resource should have messages field")
+	for _, field := range requiredFields {
+		if _, ok := schema[field]; !ok {
+			t.Errorf("Chat completion resource should have %s field", field)
+		}
+	}
+}
+
+func TestDataSourceGenerationSchema(t *testing.T) {
+	ds := dataSourceGeneration()
+
+	if ds == nil {
+		t.Fatal("dataSourceGeneration() returned nil")
 	}
 
-	if _, ok := schema["max_tokens"]; !ok {
-		t.Error("Chat completion resource should have max_tokens field")
+	schema := ds.Schema
+
+	expectedFields := []string{
+		"id", "upstream_id", "total_cost", "cache_discount",
+		"upstream_inference_cost", "created_at", "model", "provider_name",
+		"latency", "generation_time", "finish_reason", "tokens_prompt",
+		"tokens_completion", "native_tokens_prompt", "native_tokens_completion",
+		"native_tokens_reasoning", "native_tokens_cached", "num_media_prompt",
+		"num_media_completion", "origin", "usage", "is_byok",
+		"native_finish_reason", "api_type", "router",
 	}
 
-	if _, ok := schema["temperature"]; !ok {
-		t.Error("Chat completion resource should have temperature field")
+	for _, field := range expectedFields {
+		if _, ok := schema[field]; !ok {
+			t.Errorf("Generation data source should have %s field", field)
+		}
+	}
+}
+
+func TestDataSourceCreditsSchema(t *testing.T) {
+	ds := dataSourceCredits()
+
+	if ds == nil {
+		t.Fatal("dataSourceCredits() returned nil")
 	}
 
-	if _, ok := schema["content"]; !ok {
-		t.Error("Chat completion resource should have computed content field")
+	schema := ds.Schema
+
+	if _, ok := schema["total_credits"]; !ok {
+		t.Error("Credits data source should have total_credits field")
+	}
+	if _, ok := schema["total_usage"]; !ok {
+		t.Error("Credits data source should have total_usage field")
+	}
+}
+
+func TestGenerationResponseParsing(t *testing.T) {
+	jsonResp := `{
+		"data": {
+			"id": "gen-abc123",
+			"upstream_id": "upstream-xyz",
+			"total_cost": 0.0012,
+			"cache_discount": 0.0001,
+			"upstream_inference_cost": 0.0011,
+			"created_at": "2024-01-15T10:30:00Z",
+			"model": "openai/gpt-4",
+			"provider_name": "OpenAI",
+			"latency": 450,
+			"generation_time": 380,
+			"finish_reason": "stop",
+			"tokens_prompt": 10,
+			"tokens_completion": 25,
+			"native_tokens_prompt": 10,
+			"native_tokens_completion": 25,
+			"native_tokens_reasoning": 0,
+			"native_tokens_cached": 0,
+			"num_media_prompt": 0,
+			"num_media_completion": 0,
+			"origin": "https://example.com",
+			"usage": 0.0012,
+			"is_byok": false,
+			"native_finish_reason": "stop",
+			"api_type": "completions",
+			"router": "openrouter/auto"
+		}
+	}`
+
+	var resp GenerationResponse
+	if err := json.Unmarshal([]byte(jsonResp), &resp); err != nil {
+		t.Fatalf("Failed to unmarshal generation response: %s", err)
+	}
+
+	if resp.Data.ID != "gen-abc123" {
+		t.Errorf("Expected ID to be 'gen-abc123', got '%s'", resp.Data.ID)
+	}
+
+	if resp.Data.TotalCost == nil || *resp.Data.TotalCost != 0.0012 {
+		t.Errorf("Expected total_cost to be 0.0012")
+	}
+
+	if resp.Data.ProviderName == nil || *resp.Data.ProviderName != "OpenAI" {
+		t.Errorf("Expected provider_name to be 'OpenAI'")
+	}
+}
+
+func TestCreditsResponseParsing(t *testing.T) {
+	jsonResp := `{"data":{"total_credits":100.0,"total_usage":23.45}}`
+
+	var resp CreditsResponse
+	if err := json.Unmarshal([]byte(jsonResp), &resp); err != nil {
+		t.Fatalf("Failed to unmarshal credits response: %s", err)
+	}
+
+	if resp.Data.TotalCredits != 100.0 {
+		t.Errorf("Expected total_credits to be 100.0, got %f", resp.Data.TotalCredits)
+	}
+
+	if resp.Data.TotalUsage != 23.45 {
+		t.Errorf("Expected total_usage to be 23.45, got %f", resp.Data.TotalUsage)
 	}
 }
 
