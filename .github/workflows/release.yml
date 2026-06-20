@@ -3,8 +3,6 @@ name: Release
 on:
   push:
     branches: [main]
-    # When release-please creates the tag, goreleaser attaches binaries + signed
-    # checksums to the existing GitHub Release so the Terraform Registry can ingest it.
     tags: ['v*']
 
 permissions:
@@ -15,30 +13,26 @@ jobs:
   release-please:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           release-type: go
           package-name: terraform-provider-openrouter
           include-component-in-tag: false
-          changelog-types: >
-            [
-              {"type":"feat","section":"Features","hidden":false},
-              {"type":"fix","section":"Bug Fixes","hidden":false},
-              {"type":"perf","section":"Performance","hidden":false},
-              {"type":"refactor","section":"Refactoring","hidden":false},
-              {"type":"docs","section":"Documentation","hidden":false},
-              {"type":"chore","section":"Miscellaneous","hidden":false},
-              {"type":"ci","section":"Miscellaneous","hidden":false}
-            ]
 
   goreleaser:
-    if: github.ref_type == 'tag'
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
           fetch-depth: 0
 
       - name: Set up Go
@@ -58,7 +52,6 @@ jobs:
         run: |
           echo "Fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
           echo "KeyID:       ${{ steps.import_gpg.outputs.keyid }}"
-          # Fail fast if the wrong key was wired up
           if [ "${{ steps.import_gpg.outputs.keyid }}" != "2B11E3055D7BAED4" ]; then
             echo "::error::Expected signing key 2B11E3055D7BAED4, got ${{ steps.import_gpg.outputs.keyid }}"
             exit 1
