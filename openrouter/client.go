@@ -85,12 +85,79 @@ type ChatMessage struct {
 }
 
 type ChatCompletionRequest struct {
-	Model       string        `json:"model"`
-	Messages    []ChatMessage `json:"messages"`
-	MaxTokens   int           `json:"max_tokens,omitempty"`
-	Temperature *float64      `json:"temperature,omitempty"`
-	TopP        *float64      `json:"top_p,omitempty"`
-	Stream      bool          `json:"stream,omitempty"`
+	Model              string        `json:"model"`
+	Messages           []ChatMessage `json:"messages"`
+	MaxTokens          int           `json:"max_tokens,omitempty"`
+	MaxCompletionTokens int          `json:"max_completion_tokens,omitempty"`
+	Temperature        *float64      `json:"temperature,omitempty"`
+	TopP               *float64      `json:"top_p,omitempty"`
+	Stream             bool          `json:"stream,omitempty"`
+	Seed               *int          `json:"seed,omitempty"`
+	Stop               []string      `json:"stop,omitempty"`
+	FrequencyPenalty   *float64      `json:"frequency_penalty,omitempty"`
+	PresencePenalty    *float64      `json:"presence_penalty,omitempty"`
+	Logprobs           bool          `json:"logprobs,omitempty"`
+	TopLogprobs        *int          `json:"top_logprobs,omitempty"`
+	User               string        `json:"user,omitempty"`
+	SessionID          string        `json:"session_id,omitempty"`
+	ResponseFormat     interface{}   `json:"response_format,omitempty"`
+}
+
+type ResponseFormatText struct {
+	Type string `json:"type"`
+}
+
+type ResponseFormatJSONObject struct {
+	Type string `json:"type"`
+}
+
+type GenerationResponse struct {
+	Data GenerationData `json:"data"`
+}
+
+type GenerationData struct {
+	ID                             string              `json:"id"`
+	UpstreamID                     *string             `json:"upstream_id,omitempty"`
+	TotalCost                      *float64            `json:"total_cost,omitempty"`
+	CacheDiscount                  *float64            `json:"cache_discount,omitempty"`
+	UpstreamInferenceCost          *float64            `json:"upstream_inference_cost,omitempty"`
+	CreatedAt                      string              `json:"created_at"`
+	Model                          string              `json:"model"`
+	AppID                          *int64              `json:"app_id,omitempty"`
+	Streamed                       *bool               `json:"streamed,omitempty"`
+	Cancelled                      *bool               `json:"cancelled,omitempty"`
+	ProviderName                   *string             `json:"provider_name,omitempty"`
+	Latency                        *float64            `json:"latency,omitempty"`
+	ModerationLatency              *float64            `json:"moderation_latency,omitempty"`
+	GenerationTime                 *float64            `json:"generation_time,omitempty"`
+	FinishReason                   *string             `json:"finish_reason,omitempty"`
+	TokensPrompt                   *int                `json:"tokens_prompt,omitempty"`
+	TokensCompletion               *int                `json:"tokens_completion,omitempty"`
+	NativeTokensPrompt             *int                `json:"native_tokens_prompt,omitempty"`
+	NativeTokensCompletion         *int                `json:"native_tokens_completion,omitempty"`
+	NativeTokensCompletionImages   *int                `json:"native_tokens_completion_images,omitempty"`
+	NativeTokensReasoning          *int                `json:"native_tokens_reasoning,omitempty"`
+	NativeTokensCached             *int                `json:"native_tokens_cached,omitempty"`
+	NumMediaPrompt                 *int                `json:"num_media_prompt,omitempty"`
+	NumInputAudioPrompt            *int                `json:"num_input_audio_prompt,omitempty"`
+	NumMediaCompletion             *int                `json:"num_media_completion,omitempty"`
+	NumSearchResults               *int                `json:"num_search_results,omitempty"`
+	Origin                         string              `json:"origin"`
+	Usage                          float64             `json:"usage"`
+	IsByok                         bool                `json:"is_byok"`
+	NativeFinishReason             *string             `json:"native_finish_reason,omitempty"`
+	ExternalUser                   *string             `json:"external_user,omitempty"`
+	APIType                        *string             `json:"api_type,omitempty"`
+	Router                         *string             `json:"router,omitempty"`
+}
+
+type CreditsResponse struct {
+	Data CreditsData `json:"data"`
+}
+
+type CreditsData struct {
+	TotalCredits float64 `json:"total_credits"`
+	TotalUsage   float64 `json:"total_usage"`
 }
 
 type ChatCompletionResponse struct {
@@ -257,6 +324,34 @@ func (c *Client) GetBalance(ctx context.Context) (*KeyData, diag.Diagnostics) {
 	}
 
 	return &keyResp.Data, nil
+}
+
+func (c *Client) GetGeneration(ctx context.Context, generationID string) (*GenerationData, diag.Diagnostics) {
+	body, _, err := c.doRequest(ctx, "GET", "/generation?id="+generationID, nil)
+	if err != nil {
+		return nil, diag.Errorf("Failed to get generation: %s", err)
+	}
+
+	var genResp GenerationResponse
+	if err := json.Unmarshal(body, &genResp); err != nil {
+		return nil, diag.Errorf("Failed to unmarshal generation response: %s", err)
+	}
+
+	return &genResp.Data, nil
+}
+
+func (c *Client) GetCredits(ctx context.Context) (*CreditsData, diag.Diagnostics) {
+	body, _, err := c.doRequest(ctx, "GET", "/credits", nil)
+	if err != nil {
+		return nil, diag.Errorf("Failed to get credits: %s", err)
+	}
+
+	var credResp CreditsResponse
+	if err := json.Unmarshal(body, &credResp); err != nil {
+		return nil, diag.Errorf("Failed to unmarshal credits response: %s", err)
+	}
+
+	return &credResp.Data, nil
 }
 
 func (c *Client) CreateChatCompletion(ctx context.Context, req ChatCompletionRequest) (*ChatCompletionResponse, diag.Diagnostics) {
