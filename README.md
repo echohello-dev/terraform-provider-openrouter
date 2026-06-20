@@ -15,7 +15,7 @@ A Terraform provider for managing [OpenRouter](https://openrouter.ai) resources.
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0
-- Go >= 1.21 (for building from source)
+- Go >= 1.25 (for building from source)
 
 ## Installation
 
@@ -171,15 +171,10 @@ output "generated_readme" {
 
 ## Import Support
 
-Resources that support importing existing state:
-
-### openrouter_chat_completion
-
-Chat completions can be imported by their response ID:
-
-```bash
-terraform import openrouter_chat_completion.example <response_id>
-```
+The `openrouter_chat_completion` resource is create-only. There is no OpenRouter
+endpoint to fetch a previously-created completion by ID, so importing existing
+completions into Terraform state is not supported. Recreate the resource in
+config and the API call will be made again on the next `terraform apply`.
 
 ## Edge Cases and Error Handling
 

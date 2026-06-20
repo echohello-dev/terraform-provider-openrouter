@@ -23,7 +23,7 @@ description: |-
 ### Optional
 
 - `max_tokens` (Number) Maximum number of tokens to generate.
-- `temperature` (Number) Sampling temperature (0-2). Higher values make output more random.
+- `temperature` (Number) Sampling temperature (0-2). Higher values make output more random. If unset, the API default (1.0) is used.
 - `top_p` (Number) Nucleus sampling parameter. Higher values make output more focused.
 
 ### Read-Only

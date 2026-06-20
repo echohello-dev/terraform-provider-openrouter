@@ -63,15 +63,6 @@ type ModelsResponse struct {
 	Data []Model `json:"data"`
 }
 
-type BalanceResponse struct {
-	Data BalanceData `json:"data"`
-}
-
-type BalanceData struct {
-	TotalCredits float64 `json:"totalCredits,omitempty"`
-	UsedCredits  float64 `json:"usedCredits,omitempty"`
-}
-
 type KeyResponse struct {
 	Data KeyData `json:"data"`
 }
@@ -97,8 +88,8 @@ type ChatCompletionRequest struct {
 	Model       string        `json:"model"`
 	Messages    []ChatMessage `json:"messages"`
 	MaxTokens   int           `json:"max_tokens,omitempty"`
-	Temperature float64       `json:"temperature,omitempty"`
-	TopP        float64       `json:"top_p,omitempty"`
+	Temperature *float64      `json:"temperature,omitempty"`
+	TopP        *float64      `json:"top_p,omitempty"`
 	Stream      bool          `json:"stream,omitempty"`
 }
 
@@ -194,16 +185,23 @@ func (c *Client) doRequest(ctx context.Context, method, endpoint string, body in
 			lastErr = fmt.Errorf("failed to execute request: %w", err)
 			continue
 		}
-		defer resp.Body.Close()
 
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			lastErr = fmt.Errorf("failed to read response body: %w", err)
+		respBody, readErr := io.ReadAll(resp.Body)
+		closeErr := resp.Body.Close()
+		if readErr != nil {
+			lastErr = fmt.Errorf("failed to read response body: %w", readErr)
+			continue
+		}
+		if closeErr != nil {
+			lastErr = fmt.Errorf("failed to close response body: %w", closeErr)
 			continue
 		}
 
-		if resp.StatusCode == 429 {
-			lastErr = fmt.Errorf("rate limited")
+		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
+			lastErr = &APIError{
+				StatusCode: resp.StatusCode,
+				Message:    string(respBody),
+			}
 			continue
 		}
 
@@ -245,26 +243,6 @@ func (c *Client) ListModels(ctx context.Context, outputModality string) ([]Model
 	}
 
 	return resp.Data, nil
-}
-
-func (c *Client) GetModel(ctx context.Context, modelID string) (*Model, diag.Diagnostics) {
-	body, _, err := c.doRequest(ctx, "GET", "/models", nil)
-	if err != nil {
-		return nil, diag.Errorf("Failed to get model: %s", err)
-	}
-
-	var resp ModelsResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, diag.Errorf("Failed to unmarshal response: %s", err)
-	}
-
-	for _, m := range resp.Data {
-		if m.ID == modelID {
-			return &m, nil
-		}
-	}
-
-	return nil, diag.Errorf("Model not found: %s", modelID)
 }
 
 func (c *Client) GetBalance(ctx context.Context) (*KeyData, diag.Diagnostics) {

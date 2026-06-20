@@ -16,14 +16,14 @@ description = "Build the provider binary"
 alias = "b"
 run = [
   "mkdir -p .build/",
-  "go build -o .build/terraform-provider-discord",
+  "go build -o .build/terraform-provider-openrouter",
 ]
 run_windows = [
   "mkdir -p .build",
-  "go build -o .build\\terraform-provider-discord",
+  "go build -o .build\\terraform-provider-openrouter",
 ]
-sources = ["discord/**/*.go", "main.go", "go.mod", "go.sum"]
-outputs = [".build/terraform-provider-discord"]
+sources = ["openrouter/**/*.go", "main.go", "go.mod", "go.sum"]
+outputs = [".build/terraform-provider-openrouter"]
 
 [tasks.lint]
 description = "Run golangci-lint"
@@ -45,7 +45,7 @@ run = ["go fmt ./..."]
 
 [tasks.doc]
 description = "Generate Terraform documentation"
-run = ["tfplugindocs generate --rendered-provider-name Discord --provider-name discord"]
+run = ["tfplugindocs generate --rendered-provider-name OpenRouter --provider-name openrouter"]
 
 [tasks.validate]
 description = "Validate the provider"
@@ -55,13 +55,13 @@ depends = ["lint", "test"]
 description = "Install provider to terraform plugins dir"
 run = [
   "mise run build",
-  "mkdir -p ~/.terraform.d/plugins/registry.terraform.io/echohello-dev/discord/0.0.1/darwin_amd64",
-  "cp .build/terraform-provider-discord ~/.terraform.d/plugins/registry.terraform.io/echohello-dev/discord/0.0.1/darwin_amd64/",
+  "mkdir -p ~/.terraform.d/plugins/registry.terraform.io/echohello-dev/openrouter/0.0.1/darwin_arm64",
+  "cp .build/terraform-provider-openrouter ~/.terraform.d/plugins/registry.terraform.io/echohello-dev/openrouter/0.0.1/darwin_arm64/",
 ]
 run_windows = [
   "mise run build",
-  "if not exist \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\discord\\0.0.1\\windows_amd64\" mkdir \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\discord\\0.0.1\\windows_amd64\"",
-  "copy .build\\terraform-provider-discord \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\discord\\0.0.1\\windows_amd64\\",
+  "if not exist \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\openrouter\\0.0.1\\windows_amd64\" mkdir \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\openrouter\\0.0.1\\windows_amd64\"",
+  "copy .build\\terraform-provider-openrouter \"%USERPROFILE%\\.terraform.d\\plugins\\registry.terraform.io\\echohello-dev\\openrouter\\0.0.1\\windows_amd64\\",
 ]
 
 [settings]

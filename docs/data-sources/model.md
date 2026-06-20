@@ -28,6 +28,6 @@ description: |-
 - `features` (List of String) Feature flags for the model.
 - `knowledge_cutoff` (String) Date up to which the model was trained on data.
 - `name` (String) Display name of the model.
-- `pricing` (Map of Number) Pricing information for the model (input price per million tokens).
+- `pricing` (Map of Number) Pricing per million tokens, keyed by `<tier>_input` and `<tier>_output` (e.g. `text_input`, `text_output`).
 - `supported_parameters` (List of String) List of supported parameters for this model.
 - `top_provider` (String) Top provider for this model.

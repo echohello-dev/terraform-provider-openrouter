@@ -2,7 +2,6 @@ package openrouter
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,12 +48,12 @@ func dataSourceModels() *schema.Resource {
 							Computed:    true,
 							Description: "Unix timestamp of when the model was created.",
 						},
-						"pricing": {
-							Type:        schema.TypeMap,
-							Computed:    true,
-							Elem:        &schema.Schema{Type: schema.TypeFloat},
-							Description: "Pricing information for the model (input price per million tokens).",
-						},
+					"pricing": {
+						Type:        schema.TypeMap,
+						Computed:    true,
+						Elem:        &schema.Schema{Type: schema.TypeFloat},
+						Description: "Pricing per million tokens, keyed by `<tier>_input` and `<tier>_output` (e.g. `text_input`, `text_output`).",
+					},
 						"top_provider": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -124,7 +123,8 @@ func modelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 
 		pricing := make(map[string]interface{})
 		for tier, price := range m.Pricing {
-			pricing[tier] = price.Input
+			pricing[tier+"_input"] = price.Input
+			pricing[tier+"_output"] = price.Output
 		}
 		modelMap["pricing"] = pricing
 
@@ -135,7 +135,7 @@ func modelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) d
 		return diag.Errorf("Failed to set models: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("openrouter-models-%d", len(models)))
+	d.SetId("openrouter-models")
 
 	return nil
 }
