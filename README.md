@@ -8,6 +8,8 @@ A Terraform provider for managing [OpenRouter](https://openrouter.ai) resources.
   - `openrouter_models` - List all available AI models
   - `openrouter_model` - Get details for a specific model
   - `openrouter_balance` - View account credit balance and usage
+  - `openrouter_generation` - Query generation stats and cost by ID
+  - `openrouter_credits` - View total credits purchased and used
 
 - **Resources**
   - `openrouter_chat_completion` - Create chat completions and store results in state
@@ -100,6 +102,43 @@ output "credits_remaining" {
 }
 ```
 
+### Query Generation Stats and Cost
+
+Use the generation ID returned by `openrouter_chat_completion` to audit cost, latency, and provider details after the fact.
+
+```hcl
+resource "openrouter_chat_completion" "example" {
+  model = "openai/gpt-4"
+  # ... messages
+}
+
+data "openrouter_generation" "cost_audit" {
+  id = openrouter_chat_completion.example.response_id
+}
+
+output "generation_cost" {
+  value = data.openrouter_generation.cost_audit.total_cost
+}
+
+output "generation_provider" {
+  value = data.openrouter_generation.cost_audit.provider_name
+}
+```
+
+### View Total Credits
+
+```hcl
+data "openrouter_credits" "account" {}
+
+output "credits_purchased" {
+  value = data.openrouter_credits.account.total_credits
+}
+
+output "credits_used" {
+  value = data.openrouter_credits.account.total_usage
+}
+```
+
 ### Create a Chat Completion
 
 ```hcl
@@ -117,7 +156,9 @@ resource "openrouter_chat_completion" "example" {
   }
 
   max_tokens   = 500
-  temperature   = 0.7
+  temperature  = 0.7
+  seed         = 42
+  user         = "terraform-user"
 }
 
 output "response" {
