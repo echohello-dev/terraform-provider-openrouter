@@ -32,9 +32,11 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"openrouter_models": dataSourceModels(),
-			"openrouter_model":  dataSourceModel(),
-			"openrouter_balance": dataSourceBalance(),
+			"openrouter_models":     dataSourceModels(),
+			"openrouter_model":      dataSourceModel(),
+			"openrouter_balance":    dataSourceBalance(),
+			"openrouter_generation": dataSourceGeneration(),
+			"openrouter_credits":    dataSourceCredits(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"openrouter_chat_completion": resourceChatCompletion(),
