@@ -1,8 +1,9 @@
 [tools]
 go = "1.25"
 golangci-lint = "latest"
-"go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "latest"
 goreleaser = "latest"
+gh = "latest"
+"go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "latest"
 
 [env]
 GOTOOLCHAIN = "local"
@@ -26,31 +27,53 @@ run_windows = [
 sources = ["openrouter/**/*.go", "main.go", "go.mod", "go.sum"]
 outputs = [".build/terraform-provider-openrouter"]
 
-[tasks.lint]
-description = "Run golangci-lint"
-alias = "l"
-run = ["golangci-lint run ./..."]
+[tasks.fmt]
+description = "Format Go code"
+alias = "f"
+run = ["go fmt ./..."]
+
+[tasks.tidy]
+description = "Clean up go.mod and go.sum"
+run = ["go mod tidy"]
+
+[tasks.vet]
+description = "Run go vet"
+run = ["go vet ./..."]
 
 [tasks.test]
 description = "Run unit tests"
 alias = "t"
 run = ["go test -v ./..."]
 
-[tasks.tidy]
-description = "Clean up go.mod and go.sum"
-run = ["go mod tidy"]
-
-[tasks.fmt]
-description = "Format Go code"
-run = ["go fmt ./..."]
+[tasks.lint]
+description = "Run golangci-lint"
+alias = "l"
+run = ["golangci-lint run ./..."]
 
 [tasks.doc]
 description = "Generate Terraform documentation"
+alias = "d"
 run = ["tfplugindocs generate --rendered-provider-name OpenRouter --provider-name openrouter"]
 
+[tasks.doc-check]
+description = "Check if docs are up to date"
+alias = "dc"
+depends = ["doc"]
+run = ["scripts/docs-check.sh"]
+
 [tasks.validate]
-description = "Validate the provider"
-depends = ["lint", "test"]
+description = "Run all validation checks"
+alias = "v"
+depends = ["fmt", "vet", "lint", "test"]
+
+[tasks.ci]
+description = "Run CI checks (build + vet + test + lint)"
+depends = ["build", "vet", "test", "lint"]
+
+[tasks.release]
+description = "Build and release with goreleaser"
+alias = "r"
+run = ["goreleaser release --clean"]
 
 [tasks.install]
 description = "Install provider to terraform plugins dir"

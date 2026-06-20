@@ -2,35 +2,23 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/*]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  test:
-    name: Test
+  build-and-test:
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache: true
+      - name: Setup mise
+        uses: jdx/mise-action@v4
 
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Build
-        run: go build -o /dev/null .
-
-      - name: Vet
-        run: go vet ./...
-
-      - name: Test
-        run: go test -v ./...
+      - name: Run CI checks
+        run: mise run ci
 
   lint:
     name: Lint
@@ -39,17 +27,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache: true
+      - name: Setup mise
+        uses: jdx/mise-action@v4
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.4.0
-          args: --timeout=5m
+      - name: Run linter
+        run: mise run lint
 
   docs:
     name: Docs
@@ -58,22 +40,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache: true
-
-      - name: Install tfplugindocs
-        run: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
-
-      - name: Generate docs
-        run: tfplugindocs generate --rendered-provider-name OpenRouter --provider-name openrouter
-        continue-on-error: true
+      - name: Setup mise
+        uses: jdx/mise-action@v4
 
       - name: Check docs updated
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Warning: Documentation is not up to date. Please run 'tfplugindocs generate' and commit the changes."
-            git status
-          fi
+        run: mise run doc-check
