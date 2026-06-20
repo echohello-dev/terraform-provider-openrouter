@@ -36,12 +36,12 @@ func dataSourceModel() *schema.Resource {
 				Computed:    true,
 				Description: "Unix timestamp of when the model was created.",
 			},
-			"pricing": {
-				Type:        schema.TypeMap,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeFloat},
-				Description: "Pricing information for the model (input price per million tokens).",
-			},
+		"pricing": {
+			Type:        schema.TypeMap,
+			Computed:    true,
+			Elem:        &schema.Schema{Type: schema.TypeFloat},
+			Description: "Pricing per million tokens, keyed by `<tier>_input` and `<tier>_output` (e.g. `text_input`, `text_output`).",
+		},
 			"top_provider": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -97,7 +97,8 @@ func modelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) di
 
 	pricing := make(map[string]interface{})
 	for tier, price := range foundModel.Pricing {
-		pricing[tier] = price.Input
+		pricing[tier+"_input"] = price.Input
+		pricing[tier+"_output"] = price.Output
 	}
 
 	d.SetId(foundModel.ID)

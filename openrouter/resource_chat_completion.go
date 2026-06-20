@@ -14,9 +14,6 @@ func resourceChatCompletion() *schema.Resource {
 		CreateContext: chatCompletionCreate,
 		ReadContext:   chatCompletionRead,
 		DeleteContext: chatCompletionDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 		Schema: map[string]*schema.Schema{
 			"model": {
 				Type:         schema.TypeString,
@@ -58,14 +55,13 @@ func resourceChatCompletion() *schema.Resource {
 				Description:  "Maximum number of tokens to generate.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"temperature": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      0.7,
-				Description:  "Sampling temperature (0-2). Higher values make output more random.",
-				ValidateFunc: validation.FloatBetween(0, 2),
-			},
+		"temperature": {
+			Type:         schema.TypeFloat,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Sampling temperature (0-2). Higher values make output more random. If unset, the API default (1.0) is used.",
+			ValidateFunc: validation.FloatBetween(0, 2),
+		},
 			"top_p": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
@@ -128,8 +124,6 @@ func chatCompletionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	model := d.Get("model").(string)
 	maxTokens := d.Get("max_tokens").(int)
-	temperature := d.Get("temperature").(float64)
-	topP := d.Get("top_p").(float64)
 
 	messagesRaw := d.Get("messages").([]interface{})
 	messages := make([]ChatMessage, 0, len(messagesRaw))
@@ -154,11 +148,17 @@ func chatCompletionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	req := ChatCompletionRequest{
-		Model:       model,
-		Messages:    messages,
-		MaxTokens:   maxTokens,
-		Temperature: temperature,
-		TopP:        topP,
+		Model:     model,
+		Messages:  messages,
+		MaxTokens: maxTokens,
+	}
+	if tempVal := d.GetRawConfig().GetAttr("temperature"); !tempVal.IsNull() {
+		t, _ := tempVal.AsBigFloat().Float64()
+		req.Temperature = &t
+	}
+	if topPVal := d.GetRawConfig().GetAttr("top_p"); !topPVal.IsNull() {
+		p, _ := topPVal.AsBigFloat().Float64()
+		req.TopP = &p
 	}
 
 	resp, err := client.CreateChatCompletion(ctx, req)

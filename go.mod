@@ -1,6 +1,6 @@
 module github.com/echohello-dev/terraform-provider-openrouter
 
-go 1.24
+go 1.25
 
 require github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 
