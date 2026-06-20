@@ -62,13 +62,82 @@ func resourceChatCompletion() *schema.Resource {
 			Description:  "Sampling temperature (0-2). Higher values make output more random. If unset, the API default (1.0) is used.",
 			ValidateFunc: validation.FloatBetween(0, 2),
 		},
-			"top_p": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				ForceNew:     true,
-				Description:  "Nucleus sampling parameter. Higher values make output more focused.",
-				ValidateFunc: validation.FloatBetween(0, 1),
-			},
+		"top_p": {
+			Type:         schema.TypeFloat,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Nucleus sampling parameter. Higher values make output more focused.",
+			ValidateFunc: validation.FloatBetween(0, 1),
+		},
+		"seed": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Seed for deterministic sampling. If set, repeated requests with the same parameters should return similar results.",
+		},
+		"stop": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			ForceNew:    true,
+			MaxItems:    4,
+			Description: "Up to 4 sequences where the API will stop generating further tokens.",
+			Elem:        &schema.Schema{Type: schema.TypeString},
+		},
+		"frequency_penalty": {
+			Type:         schema.TypeFloat,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Penalty for repeating tokens (-2.0 to 2.0). Positive values reduce repetition.",
+			ValidateFunc: validation.FloatBetween(-2, 2),
+		},
+		"presence_penalty": {
+			Type:         schema.TypeFloat,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Penalty for introducing new tokens (-2.0 to 2.0). Positive values encourage new topics.",
+			ValidateFunc: validation.FloatBetween(-2, 2),
+		},
+		"response_format": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Format for the response: text, json_object, or json_schema.",
+			ValidateFunc: validation.StringInSlice([]string{"text", "json_object", "json_schema"}, false),
+		},
+		"stream": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			ForceNew:    true,
+			Default:     false,
+			Description: "Whether to stream the response back. Terraform cannot consume streams; this is for API passthrough only.",
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    true,
+			Description: "A unique identifier representing your end-user.",
+		},
+		"session_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "A stable session identifier (max 128 chars).",
+			ValidateFunc: validation.StringLenBetween(1, 128),
+		},
+		"logprobs": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			ForceNew:    true,
+			Default:     false,
+			Description: "Whether to return log probabilities of the output tokens.",
+		},
+		"top_logprobs": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ForceNew:     true,
+			Description:  "Number of top log probabilities to return per output token (0-20). Only used if logprobs is true.",
+			ValidateFunc: validation.IntBetween(0, 20),
+		},
 			"response_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -151,6 +220,24 @@ func chatCompletionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Model:     model,
 		Messages:  messages,
 		MaxTokens: maxTokens,
+		Stream:    d.Get("stream").(bool),
+		Logprobs:  d.Get("logprobs").(bool),
+		User:      d.Get("user").(string),
+		SessionID: d.Get("session_id").(string),
+	}
+	if v, ok := d.GetOk("seed"); ok {
+		s := v.(int)
+		req.Seed = &s
+	}
+	if v, ok := d.GetOk("stop"); ok {
+		stopRaw := v.([]interface{})
+		stops := make([]string, 0, len(stopRaw))
+		for _, s := range stopRaw {
+			if str := s.(string); str != "" {
+				stops = append(stops, str)
+			}
+		}
+		req.Stop = stops
 	}
 	if tempVal := d.GetRawConfig().GetAttr("temperature"); !tempVal.IsNull() {
 		t, _ := tempVal.AsBigFloat().Float64()
@@ -159,6 +246,27 @@ func chatCompletionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if topPVal := d.GetRawConfig().GetAttr("top_p"); !topPVal.IsNull() {
 		p, _ := topPVal.AsBigFloat().Float64()
 		req.TopP = &p
+	}
+	if freqVal := d.GetRawConfig().GetAttr("frequency_penalty"); !freqVal.IsNull() {
+		fp, _ := freqVal.AsBigFloat().Float64()
+		req.FrequencyPenalty = &fp
+	}
+	if presVal := d.GetRawConfig().GetAttr("presence_penalty"); !presVal.IsNull() {
+		pp, _ := presVal.AsBigFloat().Float64()
+		req.PresencePenalty = &pp
+	}
+	if v, ok := d.GetOk("top_logprobs"); ok {
+		tlp := v.(int)
+		req.TopLogprobs = &tlp
+	}
+	if v, ok := d.GetOk("response_format"); ok {
+		rf := v.(string)
+		switch rf {
+		case "json_object":
+			req.ResponseFormat = ResponseFormatJSONObject{Type: "json_object"}
+		default:
+			req.ResponseFormat = ResponseFormatText{Type: "text"}
+		}
 	}
 
 	resp, err := client.CreateChatCompletion(ctx, req)

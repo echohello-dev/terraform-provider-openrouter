@@ -31,8 +31,28 @@ resource "openrouter_chat_completion" "example" {
 
   max_tokens   = 500
   temperature  = 0.7
+  seed         = 42
+  user         = "terraform-user"
+  session_id   = "session-123"
 }
 
 output "response" {
   value = openrouter_chat_completion.example.content
+}
+
+# Audit the cost of the generation after the fact
+data "openrouter_generation" "cost_audit" {
+  id = openrouter_chat_completion.example.response_id
+}
+
+output "generation_cost" {
+  value = data.openrouter_generation.cost_audit.total_cost
+}
+
+output "generation_provider" {
+  value = data.openrouter_generation.cost_audit.provider_name
+}
+
+output "generation_latency_ms" {
+  value = data.openrouter_generation.cost_audit.latency
 }
