@@ -35,11 +35,8 @@ jobs:
           ref: ${{ needs.release-please.outputs.tag_name }}
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache: true
+      - name: Setup mise
+        uses: jdx/mise-action@v4
 
       - name: Import GPG key
         id: import_gpg
@@ -49,19 +46,10 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Verify GPG signing key
-        run: |
-          echo "Fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
-          echo "KeyID:       ${{ steps.import_gpg.outputs.keyid }}"
-          if [ "${{ steps.import_gpg.outputs.keyid }}" != "2B11E3055D7BAED4" ]; then
-            echo "::error::Expected signing key 2B11E3055D7BAED4, got ${{ steps.import_gpg.outputs.keyid }}"
-            exit 1
-          fi
+        run: scripts/gpg-verify.sh 2B11E3055D7BAED4
 
       - name: Run goreleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: latest
-          args: release --clean
+        run: mise run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
@@ -75,11 +63,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache: true
+      - name: Setup mise
+        uses: jdx/mise-action@v4
 
       - name: Import GPG key
         id: import_gpg
@@ -89,19 +74,10 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Verify GPG signing key
-        run: |
-          echo "Fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
-          echo "KeyID:       ${{ steps.import_gpg.outputs.keyid }}"
-          if [ "${{ steps.import_gpg.outputs.keyid }}" != "2B11E3055D7BAED4" ]; then
-            echo "::error::Expected signing key 2B11E3055D7BAED4, got ${{ steps.import_gpg.outputs.keyid }}"
-            exit 1
-          fi
+        run: scripts/gpg-verify.sh 2B11E3055D7BAED4
 
       - name: Run goreleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: latest
-          args: release --clean
+        run: mise run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
