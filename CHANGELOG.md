@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.0 (2026-08-09)
+
+
+### Features
+
+* add OpenRouter Terraform provider ([#1](https://github.com/echohello-dev/terraform-provider-openrouter/issues/1)) ([50067c6](https://github.com/echohello-dev/terraform-provider-openrouter/commit/50067c67c506cb8f613f7aa572c43d3ce88727bd))
+* generation/credits data sources + extended chat completion params ([#6](https://github.com/echohello-dev/terraform-provider-openrouter/issues/6)) ([551d9ec](https://github.com/echohello-dev/terraform-provider-openrouter/commit/551d9ec6da6a455f6ad37433369c65d3f7661fad))
+
+
+### Bug Fixes
+
+* provider cleanup + release-please CI ([#2](https://github.com/echohello-dev/terraform-provider-openrouter/issues/2)) ([07ee1b8](https://github.com/echohello-dev/terraform-provider-openrouter/commit/07ee1b86b63fe39eab5883ab61fd25058a862d74))
+
 ## [1.1.0](https://github.com/echohello-dev/terraform-provider-openrouter/compare/v1.0.0...v1.1.0) (2026-06-20)
 
 
